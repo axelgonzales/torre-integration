@@ -126,6 +126,7 @@ Todo el avance va por **una sola tool**, `track(projectId, events[])`. Cada even
 | Al terminar el sub-agente      | `agent_done` con `agent`, `activity`, `tokens`, `model`, y `durationMs`/`costUsd` si los tenés |
 | Antes de una actividad directa | `agent_start` con `agent: "main"`, `activity`, `activityName`                                 |
 | Al terminar la actividad directa | `direct_work` con `activity`, `text` y `reason`                                             |
+| Gasto que no es de tokens (API paga, servicio, horas) | `expense` con `activity`, `text` y `costUsd` (USD) |
 | Hito, rechazo u observación    | `note` con `text` y `kind: "reject"` o `"revise"` si es un retroceso                          |
 | Etapa terminada                | `stage_done`                                                                                  |
 
@@ -171,6 +172,25 @@ Reglas que aplica el servidor (no las simules, respetá su respuesta):
      la web y dejá un `note` en el historial. No lo saltees.
 5. Si el requerimiento se creó con `autoApprove`, los stop llegan como `stage` con una instrucción
    de no frenar. Respetala.
+
+## Costos de cualquier proveedor
+
+El trackeo sirve para cualquier IA o gasto, no solo para Claude:
+
+- **Otro modelo** (OpenAI, Gemini, local): informá su `model` y sus `tokens` en `agent_done`. Torre
+  calcula el costo con la tabla de precios de la organización. Revisala con `list_prices`; un admin
+  carga los precios que falten con `set_price`.
+- **Gasto que no es de tokens:** usá `expense` con el monto real, por ejemplo una API paga, un
+  servicio externo u horas de una persona.
+
+## Estado y archivado
+
+- **Proyecto activo:** tiene sub-agentes corriendo, es decir, un `agent_start` sin su `agent_done`.
+  Por eso cerrá siempre cada `agent_start`, o el proyecto queda como activo.
+- **Proyecto inactivo:** no está terminado y no corre nada.
+- **Ocultar un proyecto:** si el usuario no lo quiere ver, usá
+  `archive_project(projectId, archived: true)`. No borra nada y el proyecto sigue aceptando
+  tracking. `false` lo vuelve a mostrar.
 
 ## Paso 7: cierre y resumen de costo y tiempo
 

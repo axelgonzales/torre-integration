@@ -80,10 +80,13 @@ creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la et
   tras un fallo no duplica nada. Si Torre no responde, los eventos esperan en
   `.torre/pending-events.json` y se reenvían.
 - **Etapas con evidencia.** El servidor no deja cerrar una etapa sin ejecución registrada.
+- **Gastos generales:** además de los tokens de cualquier modelo (Claude, OpenAI, Gemini,
+  locales; con precios editables en **Cuenta**), se registran gastos que no son de IA con
+  `expense`.
 - **Totales por nivel.** Tiempo, tokens y costo se suman por actividad, etapa, proyecto y **goal**
   (varios requerimientos de un mismo proceso grande).
-- **Vista Proyectos.** En la web, la pestaña **Proyectos** muestra los proyectos activos, terminados
-  e históricos, agrupados por goal.
+- **Vista Proyectos.** En la web, la pestaña **Proyectos** muestra los proyectos agrupados por goal:
+  activos (con sub-agentes corriendo), terminados, inactivos y archivados (los que ocultaste).
 
 ## Tools MCP que usa la skill
 
@@ -99,6 +102,9 @@ creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la et
 | `get_project_workflow` | Flujo resuelto del requerimiento (fuente de verdad)                    |
 | `track`                | Única vía de tracking: lote de eventos idempotentes                    |
 | `check_gate`           | ¿El usuario ya aprobó la etapa stop?                                   |
+| `archive_project`      | Oculta o restaura un requerimiento en la web (no borra)                |
+| `list_prices`          | Precios por modelo (cualquier proveedor) usados para estimar costos    |
+| `set_price`            | Carga o ajusta el precio de un modelo (solo admin)                     |
 | `get_summary`          | Tiempo, tokens y costo por actividad/etapa/proyecto, o por goal        |
 | `upload_doc`           | Publica un documento de la etapa para revisión                         |
 | `update_project`       | Patch parcial (mode, plan, próximos agentes)                           |
