@@ -1,7 +1,7 @@
 # torre-integration: skill de Claude Code para Torre de Control
 
-Skill que conecta Claude Code con **Torre de Control**, el plano de control web de flujos de
-desarrollo con IA. Con la API key de tu cuenta, Claude Code:
+Skill que conecta Claude Code con **Torre de Control**, el plano de control web para ejecutar y
+trackear con IA cualquier tarea (desarrollo, documentos, investigación, operaciones). Con la API key de tu cuenta, Claude Code:
 
 - ejecuta el **Flujo de Trabajo** que diseñaste en la web (etapas, sub-agentes, loops, gates);
 - reporta en vivo cada etapa, hito y sub-agente, y lo ves en la web mientras trabaja;
@@ -69,28 +69,43 @@ registrá en Torre un requerimiento nuevo con el flujo "Desarrollo": endpoint de
 creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la etapa Pruebas
 ```
 
+## Cómo trackea
+
+- **Cualquier tarea, no solo código.** Si no nombrás un flujo, usa `builtin-task`
+  (Entender → Ejecutar → Verificar).
+- **Etapas y actividades.** El trabajo se divide en etapas y cada etapa en actividades.
+- **Un sub-agente por actividad.** Si no existe uno aplicable, el trabajo se registra como
+  `direct_work` con su motivo, así nada queda sin mapear.
+- **Una sola tool de tracking, `track`,** con eventos idempotentes (`id` estable): reenviar un lote
+  tras un fallo no duplica nada. Si Torre no responde, los eventos esperan en
+  `.torre/pending-events.json` y se reenvían.
+- **Etapas con evidencia.** El servidor no deja cerrar una etapa sin ejecución registrada.
+- **Totales por nivel.** Tiempo, tokens y costo se suman por actividad, etapa, proyecto y **goal**
+  (varios requerimientos de un mismo proceso grande).
+- **Vista Proyectos.** En la web, la pestaña **Proyectos** muestra los proyectos activos, terminados
+  e históricos, agrupados por goal.
+
 ## Tools MCP que usa la skill
 
-| Tool                   | Para qué                                              |
-| ---------------------- | ----------------------------------------------------- |
-| `whoami`               | Verifica la key: organización y rol                   |
-| `list_workflows`       | Flujos disponibles (builtin + de tu organización)     |
-| `get_workflow`         | Grafo completo de un flujo                            |
-| `save_workflow`        | Crea o reemplaza un flujo de la organización          |
-| `create_project`       | Registra un requerimiento nuevo                       |
-| `list_projects`        | Requerimientos con su progreso                        |
-| `get_project`          | Estado de un requerimiento                            |
-| `get_project_workflow` | Flujo resuelto del requerimiento (fuente de verdad)   |
-| `set_stage_status`     | Cambia el status de una etapa (respeta los gates)     |
-| `check_gate`           | ¿El usuario ya aprobó la etapa stop?                  |
-| `add_history`          | Hito en el historial                                  |
-| `track_subagent`       | Alta o baja de un sub-agente en curso                 |
-| `upload_doc`           | Publica un documento de la etapa para revisión        |
-| `update_project`       | Patch parcial (mode, plan, próximos agentes)          |
-| `list_subagents`       | Sub-agentes de la cuenta                              |
-| `get_subagent_file`    | AGENT.md listo para `.claude/agents/`                 |
-| `save_subagent`        | Crea o actualiza un sub-agente de la cuenta           |
-| `add_agent_to_stage`   | Suma un sub-agente a una etapa de un flujo            |
+| Tool                   | Para qué                                                               |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `whoami`               | Verifica la key: organización y rol                                    |
+| `list_workflows`       | Flujos disponibles (builtin + de tu organización)                      |
+| `get_workflow`         | Grafo completo de un flujo                                             |
+| `save_workflow`        | Crea o reemplaza un flujo de la organización                           |
+| `create_project`       | Registra un requerimiento (opcional: `goal`)                           |
+| `list_projects`        | Cartera: estado (active/completed/inactive), avance y totales          |
+| `get_project`          | Estado de un requerimiento                                             |
+| `get_project_workflow` | Flujo resuelto del requerimiento (fuente de verdad)                    |
+| `track`                | Única vía de tracking: lote de eventos idempotentes                    |
+| `check_gate`           | ¿El usuario ya aprobó la etapa stop?                                   |
+| `get_summary`          | Tiempo, tokens y costo por actividad/etapa/proyecto, o por goal        |
+| `upload_doc`           | Publica un documento de la etapa para revisión                         |
+| `update_project`       | Patch parcial (mode, plan, próximos agentes)                           |
+| `list_subagents`       | Sub-agentes de la cuenta                                               |
+| `get_subagent_file`    | AGENT.md listo para `.claude/agents/`                                  |
+| `save_subagent`        | Crea o actualiza un sub-agente de la cuenta                            |
+| `add_agent_to_stage`   | Suma un sub-agente a una etapa de un flujo                             |
 
 ## Seguridad
 
