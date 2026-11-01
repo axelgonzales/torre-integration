@@ -123,8 +123,9 @@ Todo el avance va por **una sola tool**, `track(projectId, events[])`. Cada even
 | Momento                        | Evento                                                                                       |
 | ------------------------------ | -------------------------------------------------------------------------------------------- |
 | Antes de despachar el sub-agente | `agent_start` con `agent`, `activity`, `activityName`                                      |
-| Al terminar el sub-agente      | `agent_done` con `agent`, `activity`, `durationMs`, `tokens`, `model` y `costUsd` si lo tenés |
-| Actividad hecha sin sub-agente | `direct_work` con `activity`, `activityName`, `text`, `reason` y `durationMs`                 |
+| Al terminar el sub-agente      | `agent_done` con `agent`, `activity`, `tokens`, `model`, y `durationMs`/`costUsd` si los tenés |
+| Antes de una actividad directa | `agent_start` con `agent: "main"`, `activity`, `activityName`                                 |
+| Al terminar la actividad directa | `direct_work` con `activity`, `text` y `reason`                                             |
 | Hito, rechazo u observación    | `note` con `text` y `kind: "reject"` o `"revise"` si es un retroceso                          |
 | Etapa terminada                | `stage_done`                                                                                  |
 
@@ -134,9 +135,14 @@ Reglas que aplica el servidor (no las simules, respetá su respuesta):
   `direct_work`. Si te lo rechaza, te faltó ejecutar o trackear una actividad.
 - **Transiciones automáticas.** El primer evento de una etapa la activa, y `stage_done` activa la
   siguiente. No hace falta `stage_start` salvo para marcar el inicio antes del primer sub-agente.
-- **Tiempo.** Si no mandás `durationMs`, el servidor lo mide entre `agent_start` y `agent_done`.
-  Cuando el resultado del sub-agente trae uso (`total_tokens`, `duration_ms`), informalo en `tokens`
-  y `durationMs`.
+- **Tiempo.** Si no mandás `durationMs`, el servidor lo mide entre `agent_start` y `agent_done` o
+  `direct_work`. Nunca estimes duraciones a mano: abrí siempre la actividad con `agent_start`.
+- **Tokens y costo.** Informá lo que devuelve el resultado del sub-agente:
+  - Si trae el desglose, mandá `tokens: {input, output, cacheCreation, cacheRead}`.
+  - Si solo trae `total_tokens`, mandá `tokens: {total}` y no lo cargues como `input`.
+  - `durationMs` es el `duration_ms` del resultado.
+  - `costUsd` va solo si tenés el costo real. Si no, Torre lo estima con su tabla de precios o lo
+    marca como incompleto.
 - **`stage` por defecto** es la etapa activa. Indicalo explícito cuando trackees otra.
 
 ### Que nunca se pierda un evento
