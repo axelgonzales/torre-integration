@@ -61,6 +61,8 @@ No sigas hasta que `whoami` responda. **Nunca** escribas la key en archivos del 
   - `prompt`: el texto original del usuario, tal cual.
   - `workflowId`.
   - `cwd`: la ruta absoluta del directorio de trabajo.
+  - `approvalRequired`: **no lo mandes** (por defecto el flujo corre sin frenar a pedir aprobación).
+    Usá `true` solo si el usuario pide revisar o aprobar etapas.
   - `goal`: solo si la tarea es parte de un proceso grande dividido en varios requerimientos.
     Usá el mismo `goal` en todos, así Torre suma su costo y tiempo.
 
@@ -194,6 +196,12 @@ Reglas que aplica el servidor (no las simules, respetá su respuesta):
 - **Al terminar la tarea**, si quedó `.torre/pending-events.json`, decíselo al usuario.
 
 ## Paso 6: gates (`kind="stop"`)
+
+Por defecto los requerimientos se crean **sin aprobación del usuario**: las etapas stop llegan como
+`stage` y no frenan. Si el usuario pide frenar para aprobar, usá `set_approval(projectId, true)`.
+Si pide dejar de frenar, usá `set_approval(projectId, false)`: eso libera lo que estaba bloqueado.
+
+Con la aprobación activada:
 
 1. Publicá con `upload_doc` lo que el usuario tiene que aprobar.
 2. Mandá `stage_done` de la etapa stop. Torre lo deja en `blocked` hasta que el usuario apruebe

@@ -116,6 +116,7 @@ creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la et
 | `get_project_workflow` | Flujo resuelto del requerimiento (fuente de verdad)                    |
 | `track`                | Única vía de tracking: lote de eventos idempotentes                    |
 | `check_gate`           | ¿El usuario ya aprobó la etapa stop?                                   |
+| `set_approval`         | Enciende o apaga la aprobación del usuario (por defecto: apagada)      |
 | `archive_project`      | Oculta o restaura un requerimiento en la web (no borra)                |
 | `list_prices`          | Precios por modelo (cualquier proveedor) usados para estimar costos    |
 | `set_price`            | Carga o ajusta el precio de un modelo (solo admin)                     |
