@@ -96,7 +96,9 @@ function sum(lists) {
 
 // Carpeta de una skill dentro de una ruta: .../.claude/skills/<nombre>/... (también
 // skills de plugins: .../.claude/plugins/.../skills/<nombre>/...).
-const SKILL_PATH = /[\\/]\.claude[\\/](?:[^"'\s]*?[\\/])?skills[\\/]([\w.-]+)[\\/]/g;
+// La ruta puede ser absoluta (C:\...\.claude, ~/.claude) o relativa al proyecto
+// (".claude/skills/x/..." al inicio, tras un espacio, una comilla o un "=").
+const SKILL_PATH = /(?:^|[\\/\s"'=])\.claude[\\/](?:[^"'\s]*?[\\/])?skills[\\/]([\w.-]+)[\\/]/g;
 
 /** Nombres de skills instaladas (proyecto + usuario): filtra los slash commands builtin. */
 function installedSkills(cwd) {
