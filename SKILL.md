@@ -122,13 +122,27 @@ Todo el avance va por **una sola tool**, `track(projectId, events[])`. Cada even
 
 | Momento                        | Evento                                                                                       |
 | ------------------------------ | -------------------------------------------------------------------------------------------- |
-| Antes de despachar el sub-agente | `agent_start` con `agent`, `activity`, `activityName`                                      |
+| Antes de despachar el sub-agente | `agent_start` con `agent`, `activity`, `activityName` y `skill` si una skill guía la actividad |
 | Al terminar el sub-agente      | `agent_done` con `agent`, `activity`, `tokens`, `model`, y `durationMs`/`costUsd` si los tenés |
 | Antes de una actividad directa | `agent_start` con `agent: "main"`, `activity`, `activityName`                                 |
 | Al terminar la actividad directa | `direct_work` con `activity`, `text` y `reason`                                             |
 | Gasto que no es de tokens (API paga, servicio, horas) | `expense` con `activity`, `text` y `costUsd` (USD) |
 | Hito, rechazo u observación    | `note` con `text` y `kind: "reject"` o `"revise"` si es un retroceso                          |
 | Etapa terminada                | `stage_done`                                                                                  |
+
+### Skills de cada actividad
+
+Torre registra qué skills se usaron en cada tarea. Para que la atribución sea exacta:
+
+- **`skill` en los eventos.** Si una skill guía la actividad (por ejemplo `doc-orquestador`, `doc-voz`
+  o la que trae el flujo), mandá su nombre en el campo `skill` de `agent_start`, `agent_done` y
+  `direct_work`.
+- **Descripción del sub-agente.** Empezá la `description` de cada sub-agente que despaches con
+  `[<activity>]`, por ejemplo `[medir-voz] Medir la voz del informe`. Con eso el reporter une el
+  transcript del sub-agente con su actividad y le asigna sus tokens exactos.
+- **Detección automática.** Además, `torre-usage.mjs` detecta en el transcript las skills invocadas,
+  los slash commands, los scripts de skills ejecutados y los `SKILL.md` leídos. Lo que declares en
+  los eventos se suma a eso; no lo reemplaza.
 
 Reglas que aplica el servidor (no las simules, respetá su respuesta):
 

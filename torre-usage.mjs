@@ -94,6 +94,68 @@ function sum(lists) {
   return [...t.values()];
 }
 
+// Carpeta de una skill dentro de una ruta: .../.claude/skills/<nombre>/... (también
+// skills de plugins: .../.claude/plugins/.../skills/<nombre>/...).
+const SKILL_PATH = /[\\/]\.claude[\\/](?:[^"'\s]*?[\\/])?skills[\\/]([\w.-]+)[\\/]/g;
+
+/** Nombres de skills instaladas (proyecto + usuario): filtra los slash commands builtin. */
+function installedSkills(cwd) {
+  const names = new Set();
+  for (const d of [join(cwd ?? '.', '.claude', 'skills'), join(homedir(), '.claude', 'skills')]) {
+    try {
+      for (const n of readdirSync(d)) names.add(n);
+    } catch {
+      // carpeta inexistente
+    }
+  }
+  return names;
+}
+
+/**
+ * Skills usadas en un transcript, detectadas de forma determinística:
+ *   tool   -> llamada a la tool Skill
+ *   slash  -> /comando que corresponde a una skill instalada (o de plugin "x:y")
+ *   script -> Bash/PowerShell que corre algo desde la carpeta de la skill
+ *   read   -> lectura de su SKILL.md
+ * No usa `attributionSkill`: atribuye a la última skill cargada, no a la que trabajó.
+ */
+function detectSkills(entries, installed) {
+  const found = new Map();
+  const hit = (skill, via, ts) => {
+    if (!skill) return;
+    const x = found.get(skill) ?? { skill, via: [], count: 0, first: null, last: null };
+    if (!x.via.includes(via)) x.via.push(via);
+    x.count += 1;
+    x.first ??= ts ?? null;
+    x.last = ts ?? x.last;
+    found.set(skill, x);
+  };
+  for (const l of entries) {
+    const ts = l.timestamp ?? null;
+    if (l.type === 'user') {
+      const c = l.message?.content;
+      const text = typeof c === 'string' ? c : Array.isArray(c) ? c.map((b) => (typeof b?.text === 'string' ? b.text : '')).join('\n') : '';
+      for (const m of text.matchAll(/<command-name>\/?([^<\s]+)<\/command-name>/g)) {
+        if (installed.has(m[1]) || m[1].includes(':')) hit(m[1], 'slash', ts);
+      }
+    }
+    if (l.type !== 'assistant' || !Array.isArray(l.message?.content)) continue;
+    for (const b of l.message.content) {
+      if (b?.type !== 'tool_use') continue;
+      const input = b.input ?? {};
+      if (b.name === 'Skill' && typeof input.skill === 'string') hit(input.skill, 'tool', ts);
+      if ((b.name === 'Bash' || b.name === 'PowerShell') && typeof input.command === 'string') {
+        for (const s of new Set([...input.command.matchAll(SKILL_PATH)].map((m) => m[1]))) hit(s, 'script', ts);
+      }
+      if (b.name === 'Read' && typeof input.file_path === 'string' && /SKILL\.md$/i.test(input.file_path)) {
+        const m = [...input.file_path.matchAll(SKILL_PATH)].pop();
+        if (m) hit(m[1], 'read', ts);
+      }
+    }
+  }
+  return [...found.values()];
+}
+
 /**
  * Proyecto de Torre con el que trabajó esta conversación: el projectId más usado
  * en sus llamadas a las tools mcp__torre__*. Es exacto aun cuando varias tareas
@@ -115,6 +177,7 @@ function torreProjectOf(transcript) {
 function report(transcript) {
   const sid = basename(transcript, '.jsonl');
   const main = usageOf(transcript);
+  const installed = installedSkills(cwdOf(transcript));
   const subDir = join(dirname(transcript), sid, 'subagents');
   const subagents = [];
   if (existsSync(subDir)) {
@@ -126,10 +189,15 @@ function report(transcript) {
       } catch {
         // sin meta: se reporta igual, sin tipo
       }
+      const description = meta.description ?? '';
       subagents.push({
         agentId: f.replace(/\.jsonl$/, ''),
         agentType: meta.agentType ?? '',
-        description: meta.description ?? '',
+        description,
+        // Enlace exacto con la actividad de Torre: la skill pide describir el
+        // sub-agente como "[id-actividad] ...".
+        activity: /^\s*\[([\w.:-]+)\]/.exec(description)?.[1] ?? null,
+        skills: detectSkills(lines(join(subDir, f)), installed),
         models: usageOf(join(subDir, f)),
       });
     }
@@ -140,6 +208,7 @@ function report(transcript) {
     totalCostUsd: cs?.totalCostUsd ?? null,
     models: cs?.models.length ? cs.models : sum([main, ...subagents.map((s) => s.models)]),
     main,
+    skills: detectSkills(lines(transcript), installed),
     subagents,
   };
 }
@@ -234,6 +303,8 @@ async function main() {
       tokens: tokens(rep.models),
       mainTokens: tokens(rep.main),
       subagents: rep.subagents.length,
+      skillsMain: rep.skills.map((s) => `${s.skill} (${s.via.join('+')})`),
+      skillsSubagents: rep.subagents.flatMap((s) => s.skills.map((k) => `${k.skill}@${s.activity ?? s.agentType}`)),
       costUsd: rep.totalCostUsd,
       costSource: rep.totalCostUsd === null ? 'estimado en Torre' : 'claude-code (exacto)',
     });
