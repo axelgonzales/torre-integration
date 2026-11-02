@@ -94,6 +94,24 @@ function sum(lists) {
   return [...t.values()];
 }
 
+/**
+ * Proyecto de Torre con el que trabajó esta conversación: el projectId más usado
+ * en sus llamadas a las tools mcp__torre__*. Es exacto aun cuando varias tareas
+ * comparten carpeta (el cwd solo queda como último recurso en el servidor).
+ */
+function torreProjectOf(transcript) {
+  const count = new Map();
+  for (const l of lines(transcript)) {
+    if (l.type !== 'assistant' || !Array.isArray(l.message?.content)) continue;
+    for (const b of l.message.content) {
+      if (b?.type !== 'tool_use' || !String(b.name).startsWith('mcp__torre__')) continue;
+      const id = b.input?.projectId;
+      if (typeof id === 'string' && id) count.set(id, (count.get(id) ?? 0) + 1);
+    }
+  }
+  return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+}
+
 function report(transcript) {
   const sid = basename(transcript, '.jsonl');
   const main = usageOf(transcript);
@@ -208,7 +226,7 @@ async function main() {
   for (const f of files) {
     const rep = report(f);
     // El cwd real de la sesión (del transcript) manda sobre el argumento.
-    const r = await send(rep, cwdOf(f) ?? cwd, opt('--project'));
+    const r = await send(rep, cwdOf(f) ?? cwd, opt('--project') ?? torreProjectOf(f));
     out.push({
       claudeSessionId: rep.claudeSessionId,
       tracked: r.tracked,
