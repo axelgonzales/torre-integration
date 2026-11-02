@@ -130,6 +130,25 @@ Todo el avance va por **una sola tool**, `track(projectId, events[])`. Cada even
 | Hito, rechazo u observación    | `note` con `text` y `kind: "reject"` o `"revise"` si es un retroceso                          |
 | Etapa terminada                | `stage_done`                                                                                  |
 
+### Paralelo y secuencia (línea de tiempo)
+
+Torre dibuja una línea de tiempo con cada ejecución y marca qué corrió en paralelo y qué en
+secuencia. Para que sea fiel:
+
+- **Actividades independientes, en paralelo.** Si una etapa tiene actividades que no dependen entre
+  sí (por ejemplo lógica, interfaz y estilos), despachá sus sub-agentes **en paralelo**: un solo
+  mensaje con varias llamadas Agent.
+- **Inicio antes de despachar.** Mandá el `agent_start` de cada uno justo antes del despacho. Si van
+  en paralelo, todos los `agent_start` en un mismo lote.
+- **Fin apenas termina cada uno.** Mandá el `agent_done` de cada sub-agente en cuanto termina, con
+  su `durationMs` (el `duration_ms` del resultado). No juntes los cierres de una etapa en un solo
+  lote al final.
+- **Dependencias, en secuencia.** Lo que depende de un resultado anterior (integrar, probar,
+  revisar) va después.
+- **Revisar la línea de tiempo.** `get_timeline(projectId)` devuelve las barras tal como las ve el
+  usuario. Los tiempos exactos salen del transcript de cada sub-agente cuando corrés
+  `torre-usage.mjs`.
+
 ### Skills de cada actividad
 
 Torre registra qué skills se usaron en cada tarea. Para que la atribución sea exacta:

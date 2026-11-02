@@ -119,6 +119,7 @@ creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la et
 | `archive_project`      | Oculta o restaura un requerimiento en la web (no borra)                |
 | `list_prices`          | Precios por modelo (cualquier proveedor) usados para estimar costos    |
 | `set_price`            | Carga o ajusta el precio de un modelo (solo admin)                     |
+| `get_timeline`         | Línea de tiempo: inicio/fin de cada agente, paralelo vs. secuencia     |
 | `get_summary`          | Tiempo, tokens y costo por actividad/etapa/proyecto, o por goal        |
 | `upload_doc`           | Publica un documento de la etapa para revisión                         |
 | `update_project`       | Patch parcial (mode, plan, próximos agentes)                           |

@@ -192,6 +192,7 @@ function report(transcript) {
         // sin meta: se reporta igual, sin tipo
       }
       const description = meta.description ?? '';
+      const stamps = lines(join(subDir, f)).map((l) => l.timestamp).filter((t) => typeof t === 'string' && !Number.isNaN(Date.parse(t))).sort();
       subagents.push({
         agentId: f.replace(/\.jsonl$/, ''),
         agentType: meta.agentType ?? '',
@@ -200,6 +201,8 @@ function report(transcript) {
         // sub-agente como "[id-actividad] ...".
         activity: /^\s*\[([\w.:-]+)\]/.exec(description)?.[1] ?? null,
         skills: detectSkills(lines(join(subDir, f)), installed),
+        startedAt: stamps[0] ?? null,
+        endedAt: stamps.at(-1) ?? null,
         models: usageOf(join(subDir, f)),
       });
     }
