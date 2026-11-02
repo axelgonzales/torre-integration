@@ -192,9 +192,27 @@ El trackeo sirve para cualquier IA o gasto, no solo para Claude:
   `archive_project(projectId, archived: true)`. No borra nada y el proyecto sigue aceptando
   tracking. `false` lo vuelve a mostrar.
 
+## Paso 6b: medir el consumo real (obligatorio)
+
+Los eventos `track` solo traen lo que vos sabés de los sub-agentes, y vos no conocés tu propio
+consumo como agente principal. El consumo real está en el transcript de esta sesión. Reportalo con
+el script que viene con esta skill: suma todos tus tokens, los de cada sub-agente y, cuando existe,
+el costo exacto que calculó Claude Code.
+
+```
+node ~/.claude/skills/torre-integration/torre-usage.mjs --cwd "<directorio de trabajo>"
+```
+
+- Si la skill está instalada en el proyecto, la ruta es `.claude/skills/torre-integration/torre-usage.mjs`.
+- **Cuándo:** al cerrar cada etapa y al terminar la tarea. Es idempotente, así que podés correrlo
+  todas las veces que quieras sin duplicar nada.
+- Si el script responde `tracked: false`, pasale el proyecto con `--project <projectId>`.
+- **Automático (opcional):** el usuario puede agregar el script como hook `Stop` en
+  `.claude/settings.json`. Pedí confirmación antes de tocar esa configuración.
+
 ## Paso 7: cierre y resumen de costo y tiempo
 
-Al terminar, llamá `get_summary(projectId)`, o `get_summary(goal)` si la tarea es parte de un goal.
+Al terminar, corré el reporter del Paso 6b y después llamá `get_summary(projectId)`, o `get_summary(goal)` si la tarea es parte de un goal.
 Informale al usuario el tiempo, los tokens y el costo por etapa y por actividad.
 
 Si el resumen dice `costIncomplete: true`, alguna ejecución no trajo costo. Aclaralo y no inventes

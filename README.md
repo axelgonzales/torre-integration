@@ -55,6 +55,20 @@ Reiniciá Claude Code y verificá con `/mcp` que `torre` figure como conectado.
 
 Para actualizar la skill: `git -C ~/.claude/skills/torre-integration pull`.
 
+### 3. (Recomendado) Medir el consumo real
+
+`torre-usage.mjs` lee el transcript de Claude Code y le manda a Torre los tokens reales del agente
+principal y de cada sub-agente, más el costo exacto cuando Claude Code lo registró. La skill lo
+corre sola al cerrar cada etapa. Para que también corra en cada turno, agregá este hook en
+`.claude/settings.json`:
+
+```json
+{ "hooks": { "Stop": [{ "hooks": [{ "type": "command", "command": "node ~/.claude/skills/torre-integration/torre-usage.mjs" }] }] } }
+```
+
+Para cargar el consumo de sesiones anteriores de un proyecto:
+`node ~/.claude/skills/torre-integration/torre-usage.mjs --cwd <dir> --all`.
+
 ## Uso
 
 ```
