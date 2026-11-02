@@ -207,7 +207,8 @@ async function main() {
   const out = [];
   for (const f of files) {
     const rep = report(f);
-    const r = await send(rep, cwd, opt('--project'));
+    // El cwd real de la sesión (del transcript) manda sobre el argumento.
+    const r = await send(rep, cwdOf(f) ?? cwd, opt('--project'));
     out.push({
       claudeSessionId: rep.claudeSessionId,
       tracked: r.tracked,
