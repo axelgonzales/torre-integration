@@ -83,6 +83,15 @@ registrá en Torre un requerimiento nuevo con el flujo "Desarrollo": endpoint de
 creá en Torre un sub-agente "build-foo-checker" que revise ... y sumalo a la etapa Pruebas
 ```
 
+## Modos de desarrollo
+
+Al pedir un desarrollo, la skill te ofrece dos modos:
+
+| Modo                 | Flujo                     | Qué hace                                                                                   |
+| -------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+| Con supervisión      | `builtin-dev-supervisado` | Plan con criterios de aceptación, **tu aprobación del plan**, construcción y verificación  |
+| Sin supervisión      | `builtin-dev-autonomo`    | Planifica, construye, verifica y corrige solo hasta cumplir los criterios                  |
+
 ## Cómo trackea
 
 - **Cualquier tarea, no solo código.** Si no nombrás un flujo, usa `builtin-task`

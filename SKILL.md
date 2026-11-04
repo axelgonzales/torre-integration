@@ -53,7 +53,17 @@ No sigas hasta que `whoami` responda. **Nunca** escribas la key en archivos del 
 - **Si el usuario dio un id**: llamá `get_project(projectId)`.
 - **Si es un pedido nuevo**: elegí el flujo con `list_workflows`.
   - Si el usuario nombró un flujo, usá ese.
-  - Si es desarrollo de software, usá `builtin-dev`.
+  - **Si es desarrollo de software**, ofrecé los dos modos y dejá que el usuario elija, salvo que ya
+    lo haya dicho («sin supervisión», «sin preguntarme», «quiero aprobar el plan»):
+    - **Con supervisión** (`builtin-dev-supervisado`): planificás y fijás criterios de aceptación, el
+      usuario **aprueba el plan** y recién ahí se construye y verifica.
+    - **Sin supervisión** (`builtin-dev-autonomo`): planificás, construís, verificás y corregís
+      **sin pedir aprobaciones**, hasta cumplir todos los criterios de aceptación (hasta 3 vueltas de
+      corrección; si no alcanza, cerrás reportando qué faltó y por qué).
+
+    Si la sesión no es interactiva (no hay a quién preguntarle), usá **sin supervisión** y decilo en
+    el resumen. Para un flujo de desarrollo propio de la organización (por ejemplo, uno de
+    microservicios), respetá el que nombre el usuario.
   - Para cualquier otra tarea, usá **`builtin-task`** (Entender → Ejecutar → Verificar).
 
   Después llamá `create_project` con:
@@ -150,6 +160,18 @@ secuencia. Para que sea fiel:
 - **Revisar la línea de tiempo.** `get_timeline(projectId)` devuelve las barras tal como las ve el
   usuario. Los tiempos exactos salen del transcript de cada sub-agente cuando corrés
   `torre-usage.mjs`.
+
+### Criterios de aceptación (flujos de desarrollo)
+
+En `builtin-dev-supervisado` y `builtin-dev-autonomo`:
+
+- **El Plan define los criterios.** Cada uno es verificable: dice qué se comprueba y con qué prueba,
+  comando o chequeo concreto. Publicalos con `upload_doc` (key=`plan`).
+- **La Verificación los comprueba uno por uno** y lo reporta con `note`: cuáles pasan y cuáles no.
+- **Si alguno falla, volvés a Construcción** y rehacés solo lo que falló. Cada vuelta es una nueva
+  ejecución con `n+1` en el `id` de los eventos.
+- **«Terminado» quiere decir todos los criterios en verde.** No cierres la etapa de Entrega con un
+  criterio rojo sin decirlo explícitamente.
 
 ### Skills de cada actividad
 
